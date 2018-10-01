@@ -1,0 +1,1 @@
+/usr/bin/cc  -g   CMakeFiles/ISA.dir/main.c.o CMakeFiles/ISA.dir/argChecker.c.o  -o ISA 
