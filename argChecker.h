@@ -10,6 +10,4 @@
 #include <dirent.h>
 #include "queue.h"
 
-int checkArg(char **arguments,int lenght, TQueue *url, TQueue *cert);
-int loadUrlFile(TQueue *url, char *file);
-int loadCertDir(TQueue *cert, char *dir);
+int checkArg(char **arguments,int lenght, TQueue *url, TQueue *cert, int *certFlag, int *tFlag, int *aFlag, int *uFlag);
