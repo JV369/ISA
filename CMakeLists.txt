@@ -3,5 +3,5 @@ project(ISA)
 
 set(CMAKE_C_STANDARD 99)
 
-set(SOURCE_FILES main.c argChecker.c argChecker.h)
+set(SOURCE_FILES main.c argChecker.c argChecker.h feeder.c feeder.h)
 add_executable(ISA ${SOURCE_FILES})

@@ -90,6 +90,12 @@
 		<Unit filename="/home/jan/ISA/argChecker.h">
 			<Option target="ISA"/>
 		</Unit>
+		<Unit filename="/home/jan/ISA/feeder.c">
+			<Option target="ISA"/>
+		</Unit>
+		<Unit filename="/home/jan/ISA/feeder.h">
+			<Option target="ISA"/>
+		</Unit>
 		<Unit filename="/home/jan/ISA/main.c">
 			<Option target="ISA"/>
 		</Unit>

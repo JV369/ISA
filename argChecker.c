@@ -52,49 +52,56 @@ int loadCertDir(TQueue *cert,char *dir){
  */
 int checkArg(char **arguments,int lenght, TQueue *url, TQueue *cert, int *certFlag, int *tFlag, int *aFlag, int *uFlag){
     int urlFlag = 0;
-
+    int urlFFlag = 0;
     for (int i = 1; i < lenght; i++) {
-        if(strcmp(arguments[i],"-f") == 0){
-            loadUrlFile(url,arguments[i+1]);
-            urlFlag = 1;
-            i++;
-        }
-        else if(strcmp(arguments[i],"-c") == 0){
-            QueueUp(url,arguments[i+1]);
-            *certFlag = 1;
-            i++;
-        }
-        else if(strcmp(arguments[i],"-C") == 0){
-            int j = 0;
-            while(arguments[i+1][j] != '\0')
-                j++;
-            if(arguments[i+1][j-1] != '/'){
-                char *str = (char *)malloc(strlen(arguments[i+1])+2);
-                strcpy(str,arguments[i+1]);
-                strcat(str,"/");
-                loadCertDir(cert,str);
-                free(str);
+        if (arguments[i][0] == '-') {
+            int ops = 1;
+            int skip = 0;
+            for (int k = 1; k < strlen(arguments[i]); k++) {
+                if (arguments[i][k] == 'f') {
+                    loadUrlFile(url, arguments[i + ops]);
+                    urlFFlag = 1;
+                    ops++;
+                    skip++;
+                } else if (arguments[i][k] == 'c'){
+                    QueueUp(url, arguments[i + 1]);
+                    *certFlag = 1;
+                    skip++;
+                    ops++;
+                } else if (arguments[i][k] == 'C') {
+                    int j = 0;
+                    while (arguments[i + 1][j] != '\0')
+                        j++;
+                    if (arguments[i + 1][j - 1] != '/') {
+                        char *str = (char *) malloc(strlen(arguments[i + 1]) + 2);
+                        strcpy(str, arguments[i + 1]);
+                        strcat(str, "/");
+                        loadCertDir(cert, str);
+                        free(str);
+                    } else
+                        loadCertDir(cert, arguments[i + 1]);
+                    *certFlag = 1;
+                    skip++;
+                    ops++;
+                } else if (arguments[i][k] == 'T') {
+                    *tFlag = 1;
+                } else if (arguments[i][k] == 'a') {
+                    *aFlag = 1;
+                } else if (arguments[i][k] == 'u') {
+                    *uFlag = 1;
+                } else{
+                    fprintf(stderr,"Chyba spatny prepinac");
+                    return -1;
+                }
             }
-            else
-                loadCertDir(cert,arguments[i+1]);
-            *certFlag = 1;
-            i++;
+            i += skip;
         }
-        else if(strcmp(arguments[i],"-T") == 0){
-            *tFlag = 1;
-        }
-        else if(strcmp(arguments[i],"-a") == 0){
-            *aFlag = 1;
-        }
-        else if(strcmp(arguments[i],"-u") == 0){
-            *uFlag = 1;
-        }
-        else{
-            QueueUp(url,arguments[i]);
+        else if(!urlFlag){
+            QueueUp(url, arguments[i]);
             urlFlag = 1;
         }
     }
-    if(!urlFlag){
+    if(!urlFlag && !urlFFlag){
         char *line = NULL;
         size_t size = 0;
         printf("Nezadal jste adresu pro cteni. Prosim zadejte adresu.\n");
