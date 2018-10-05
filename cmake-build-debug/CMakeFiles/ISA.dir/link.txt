@@ -1,1 +1,1 @@
-/usr/bin/cc  -g   CMakeFiles/ISA.dir/main.c.o CMakeFiles/ISA.dir/argChecker.c.o CMakeFiles/ISA.dir/feeder.c.o  -o ISA 
+/usr/bin/cc  -g   CMakeFiles/ISA.dir/main.c.o CMakeFiles/ISA.dir/argChecker.c.o CMakeFiles/ISA.dir/feeder.c.o CMakeFiles/ISA.dir/queue.c.o  -o ISA 

@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
         printf("%s\n",line);
         free(line);
     }*/
-    printf("%d %d %d\n",tFlag,aFlag,uFlag);
+    //printf("%d %d %d\n",tFlag,aFlag,uFlag);
     feedreader(url,cert,certFlag,tFlag,aFlag,uFlag);
     free(url);
     free(cert);

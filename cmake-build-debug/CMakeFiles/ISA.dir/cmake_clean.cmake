@@ -2,6 +2,7 @@ file(REMOVE_RECURSE
   "CMakeFiles/ISA.dir/main.c.o"
   "CMakeFiles/ISA.dir/argChecker.c.o"
   "CMakeFiles/ISA.dir/feeder.c.o"
+  "CMakeFiles/ISA.dir/queue.c.o"
   "ISA.pdb"
   "ISA"
 )

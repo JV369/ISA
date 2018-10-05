@@ -7,6 +7,7 @@ set(CMAKE_DEPENDS_CHECK_C
   "/home/jan/ISA/argChecker.c" "/home/jan/ISA/cmake-build-debug/CMakeFiles/ISA.dir/argChecker.c.o"
   "/home/jan/ISA/feeder.c" "/home/jan/ISA/cmake-build-debug/CMakeFiles/ISA.dir/feeder.c.o"
   "/home/jan/ISA/main.c" "/home/jan/ISA/cmake-build-debug/CMakeFiles/ISA.dir/main.c.o"
+  "/home/jan/ISA/queue.c" "/home/jan/ISA/cmake-build-debug/CMakeFiles/ISA.dir/queue.c.o"
   )
 set(CMAKE_C_COMPILER_ID "GNU")
 
