@@ -53,6 +53,7 @@ int loadCertDir(TQueue *cert,char *dir){
 int checkArg(char **arguments,int lenght, TQueue *url, TQueue *cert, int *certFlag, int *tFlag, int *aFlag, int *uFlag){
     int urlFlag = 0;
     int urlFFlag = 0;
+    int position = 1;
     for (int i = 1; i < lenght; i++) {
         if (arguments[i][0] == '-') {
             int ops = 1;
@@ -84,11 +85,14 @@ int checkArg(char **arguments,int lenght, TQueue *url, TQueue *cert, int *certFl
                     skip++;
                     ops++;
                 } else if (arguments[i][k] == 'T') {
-                    *tFlag = 1;
+                    *tFlag = position;
+                    position++;
                 } else if (arguments[i][k] == 'a') {
-                    *aFlag = 1;
+                    *aFlag = position;
+                    position++;
                 } else if (arguments[i][k] == 'u') {
-                    *uFlag = 1;
+                    *uFlag = position;
+                    position++;
                 } else{
                     fprintf(stderr,"Chyba spatny prepinac");
                     return -1;

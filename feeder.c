@@ -66,6 +66,223 @@ int uniteChunks(char **io){
     return 0;
 }
 
+void printItem(char *title, char *time, char *author, char *url, int tFlag, int aFlag, int uFlag){
+    if(title == NULL){
+        title = (char *)malloc(50);
+        strcpy(title,"Chyba: chybí titulek u \"item\" ");
+    }
+    if(time == NULL){
+        time = (char *)malloc(50);
+        strcpy(time,"Chyba: chybí čas aktualizace u \"item\" ");
+    }
+    if(author == NULL){
+        author = (char *)malloc(50);
+        strcpy(author,"Chyba: chybí autor u \"item\" ");
+    }
+    if(url == NULL){
+        url = (char *)malloc(50);
+        strcpy(url,"Chyba: chybí url u \"item\" ");
+    }
+    printf("%s\n",title);
+
+    for (int i = 1; i < 4; i++) {
+        if(tFlag == i)
+            printf("Aktualizace: %s\n",time);
+        else if(uFlag == i)
+            printf("URL: %s\n",url);
+        else if(aFlag == i)
+            printf("Autor: %s\n",author);
+    }
+    if(tFlag || aFlag || uFlag)
+        printf("\n");
+
+    free(title);
+    free(time);
+    free(author);
+    free(url);
+}
+
+int rssLegacyProcessItem(xmlNode *rssItem, int tFlag, int aFlag, int uFlag){
+    char *title = NULL;
+    char *time = NULL;
+    char *author = NULL;
+    char *url = NULL;
+
+    for (xmlNode *actItem = rssItem; actItem != NULL ; actItem = actItem->next) {
+        //printf("%s\n",actItem->name);
+        if(xmlStrcmp(actItem->name,(xmlChar *)"title") == 0){
+            title = (char *)malloc(strlen((char *)actItem->children->content)+1);
+            strcpy(title,(char *)actItem->children->content);
+        }
+        else if(xmlStrcmp(actItem->name,(xmlChar *)"") == 0){
+            time = (char *)malloc(strlen((char *)actItem->children->content)+1);
+            strcpy(time,(char *)actItem->children->content);
+        }
+        else if(xmlStrcmp(actItem->name,(xmlChar *)"link") == 0){
+            url = (char *)malloc(strlen((char *)actItem->children->content)+1);
+            strcpy(url,(char *)actItem->children->content);
+        }
+        else if(xmlStrcmp(actItem->name,(xmlChar *)"") == 0){
+            //TODO najít pridani autora
+        }
+    }
+
+    printItem(title,time,author,url,tFlag,aFlag,uFlag);
+    return 0;
+}
+
+int parseLegacyRss(xmlNode *node, int tFlag, int aFlag, int uFlag){
+    if(node == NULL){
+        fprintf(stderr,"Chyba, nespravny format xml\n");
+        return 1;
+    }
+    node = node->children;
+    for(xmlNode *actNode = node; actNode != NULL;actNode = actNode->next){
+        if(xmlStrcmp(actNode->name,(xmlChar *)"channel") == 0) {
+            for (xmlNode *actChannel = actNode->children; actChannel != NULL ; actChannel = actChannel->next) {
+                if(xmlStrcmp(actNode->name,(xmlChar *)"title") == 0){
+                    //if pro chybu
+                    printf("*** %s ***\n",actNode->children->content);
+                    break;
+                }
+            }
+        }
+        else if(xmlStrcmp(actNode->name,(xmlChar *)"item")){
+            rssLegacyProcessItem(actNode->children,tFlag,aFlag,uFlag);
+        }
+
+    }
+
+    return 0;
+}
+
+int rssProcessItem(xmlNode *rssItem, int tFlag, int aFlag, int uFlag){
+    char *title = NULL;
+    char *time = NULL;
+    char *author = NULL;
+    char *url = NULL;
+
+    for (xmlNode *actItem = rssItem; actItem != NULL ; actItem = actItem->next) {
+        //printf("%s\n",actItem->name);
+        if(xmlStrcmp(actItem->name,(xmlChar *)"title") == 0){
+            title = (char *)malloc(strlen((char *)actItem->children->content)+1);
+            strcpy(title,(char *)actItem->children->content);
+        }
+        else if(xmlStrcmp(actItem->name,(xmlChar *)"pubDate") == 0){
+            time = (char *)malloc(strlen((char *)actItem->children->content)+1);
+            strcpy(time,(char *)actItem->children->content);
+        }
+        else if(xmlStrcmp(actItem->name,(xmlChar *)"guid") == 0){
+            url = (char *)malloc(strlen((char *)actItem->children->content)+1);
+            strcpy(url,(char *)actItem->children->content);
+        }
+        else if(xmlStrcmp(actItem->name,(xmlChar *)"author") == 0){
+            author = (char *)malloc(strlen((char *)actItem->children->content)+1);
+            strcpy(author,(char *)actItem->children->content);
+        }
+    }
+
+    printItem(title,time,author,url,tFlag,aFlag,uFlag);
+    return 0;
+}
+
+int parseRss(xmlNode *node, int tFlag, int aFlag, int uFlag){
+    while(xmlStrcmp(node->name,(xmlChar *)"channel") != 0 && node != NULL){
+        node = node->next;
+    }
+    if(node == NULL){
+        fprintf(stderr,"Chyba, nespravny format xml\n");
+        return 1;
+    }
+    node = node->children;
+    for(xmlNode *actNode = node; actNode != NULL;actNode = actNode->next){
+        if(xmlStrcmp(actNode->name,(xmlChar *)"title") == 0){
+            //if pro chybu
+            printf("*** %s ***\n",actNode->children->content);
+        }
+        else if(xmlStrcmp(actNode->name,(xmlChar *)"item") == 0){
+            rssProcessItem(actNode->children,tFlag,aFlag,uFlag);
+        }
+
+    }
+
+    return 0;
+}
+
+int atomProcessEntry(xmlNode *rssItem, int tFlag, int aFlag, int uFlag){
+    char *title = NULL;
+    char *time = NULL;
+    char *author = NULL;
+    char *url = NULL;
+
+    for (xmlNode *actItem = rssItem; actItem != NULL ; actItem = actItem->next) {
+        //printf("%s\n",actItem->name);
+        if(xmlStrcmp(actItem->name,(xmlChar *)"title") == 0){
+            title = (char *)malloc(strlen((char *)actItem->children->content)+1);
+            strcpy(title,(char *)actItem->children->content);
+        }
+        else if(xmlStrcmp(actItem->name,(xmlChar *)"updated") == 0){
+            time = (char *)malloc(strlen((char *)actItem->children->content)+1);
+            strcpy(time,(char *)actItem->children->content);
+        }
+        else if(xmlStrcmp(actItem->name,(xmlChar *)"link") == 0){
+            //url = (char *)malloc(strlen((char *)actItem->properties->)+1);
+            //strcpy(url,(char *)actItem->children->content);
+            printf("%s\n",actItem->properties->name);
+        }
+        else if(xmlStrcmp(actItem->name,(xmlChar *)"author") == 0){
+
+        }
+    }
+
+    printItem(title,time,author,url,tFlag,aFlag,uFlag);
+    return 0;
+}
+
+int parseAtom(xmlNode *node, int tFlag, int aFlag, int uFlag){
+    if(node == NULL){
+        fprintf(stderr,"Chyba, nespravny format xml\n");
+        return 1;
+    }
+    node = node->children;
+    for(xmlNode *actNode = node; actNode != NULL;actNode = actNode->next){
+        if(xmlStrcmp(actNode->name,(xmlChar *)"title") == 0){
+            //if pro chybu
+            printf("*** %s ***\n",actNode->children->content);
+        }
+        else if(xmlStrcmp(actNode->name,(xmlChar *)"entry")){
+            atomProcessEntry(actNode->children,tFlag,aFlag,uFlag);
+        }
+
+    }
+
+    return 0;
+}
+
+//prevzato z xml examles tree 1 TODO
+int parsexml(char *input, int tFlag, int aFlag, int uFlag){
+    xmlDoc *feed = NULL;
+    xmlNode *root = NULL;
+
+    feed = xmlReadDoc((xmlChar *)input,"newurl.org",NULL,0);
+
+    root = xmlDocGetRootElement(feed);
+    if(xmlStrcmp(root->name,(xmlChar *)"rss") == 0){
+        parseRss(root->children, tFlag,aFlag,uFlag);
+    }
+    else if(xmlStrcmp(root->name,(xmlChar *)"feed") == 0){
+        parseAtom(root->children, tFlag,aFlag,uFlag);
+    }
+    else if(xmlStrcmp(root->name,(xmlChar *)"rdf:RDF") == 0){
+        parseLegacyRss(root->children, tFlag,aFlag,uFlag);
+    }
+
+    xmlFreeDoc(feed);
+    xmlCleanupParser();
+    return 0;
+}
+
+
 //utrzky prevzaty z ibm tutorialu TODO
 int getNoSslFeed(char *hostname, char *fileAddr, char **output){
     BIO * bio;
@@ -104,15 +321,8 @@ int getNoSslFeed(char *hostname, char *fileAddr, char **output){
     /* Read in the response */
     for(;;) {
         p = BIO_read(bio, tmpbuff, 1023);
-        /*
-        printf("%d\n",p);
-        if(p != 1023)
-            printf("%s\n",tmpbuff);
-            */
         if(p <= 0)
             break;
-        //if(p != 1023)
-          //  printf("%d\n%s\n",p,tmpbuff);
        if(!skipFlag) {
            skipFlag = 1;
            int j = 0;
@@ -179,7 +389,9 @@ int feedreader(TQueue *url, TQueue *cert, int certFlag, int tFlag, int aFlag, in
             getNoSslFeed(hostname,fileAddr,&output);
         }
 
-        printf("%s\n",output);
+        //printf("%s\n",output);
+
+        parsexml(output, tFlag, aFlag, uFlag);
         free(activeUrl);
         free(hostname);
         free(fileAddr);
