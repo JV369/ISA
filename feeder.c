@@ -387,7 +387,7 @@ int getSslFeed(char *hostname, char *fileAddr, TQueue *cert, int certFlag, char 
 
     /* Set up the SSL context */
 
-    ctx = SSL_CTX_new(SSLv23_client_method());
+    ctx = SSL_CTX_new(SSLv23_method());
 
     /* Load the trust store */
     if(!certFlag)
