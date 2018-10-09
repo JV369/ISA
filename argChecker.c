@@ -14,7 +14,7 @@ int loadUrlFile(TQueue *url, char *file){
 
     size_t size = 0;
     char *line = NULL;
-    while(getline(&line,&size,fp) != -1){
+    while((getline(&line,&size,fp)) != -1){
         if(line[0] == '#'){
             continue;
         }
@@ -36,8 +36,9 @@ int loadCertDir(TQueue *cert,char *dir){
     }
 
     while ((dirIn = readdir(dp)) != NULL){
-        char *str = (char *)malloc(strlen(dir)+strlen(dirIn->d_name)+1);
+        char *str = (char *)malloc(strlen(dir)+strlen(dirIn->d_name)+2);
         strcpy(str,dir);
+        //strcat(str,"#");
         strcat(str,dirIn->d_name);
         QueueUp(cert,str);
         free(str);

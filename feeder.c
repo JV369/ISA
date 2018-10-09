@@ -1,6 +1,7 @@
 #include "feeder.h"
 
 int analyseHeader(char *input,int *chunk){
+    //printf("%s\n\n",input);
     char *line = (char *)malloc(128);
     memset(line,0,128);
     int newLine = 0;
@@ -66,7 +67,7 @@ int uniteChunks(char **io){
     return 0;
 }
 
-void printItem(char *title, char *time, char *author, char *url, int tFlag, int aFlag, int uFlag){
+void printItem(char *title, char *time, char *author, char *email,char *url, int tFlag, int aFlag, int uFlag){
     if(title == NULL){
         title = (char *)malloc(50);
         strcpy(title,"Chyba: chybí titulek u \"item\" ");
@@ -75,7 +76,7 @@ void printItem(char *title, char *time, char *author, char *url, int tFlag, int 
         time = (char *)malloc(50);
         strcpy(time,"Chyba: chybí čas aktualizace u \"item\" ");
     }
-    if(author == NULL){
+    if(author == NULL && email == NULL){
         author = (char *)malloc(50);
         strcpy(author,"Chyba: chybí autor u \"item\" ");
     }
@@ -90,8 +91,14 @@ void printItem(char *title, char *time, char *author, char *url, int tFlag, int 
             printf("Aktualizace: %s\n",time);
         else if(uFlag == i)
             printf("URL: %s\n",url);
-        else if(aFlag == i)
-            printf("Autor: %s\n",author);
+        else if(aFlag == i) {
+            if(email == NULL)
+                printf("Autor: %s\n", author);
+            else if(author == NULL)
+                printf("Email: %s\n", email);
+            else
+                printf("Autor: %s\nEmail: %s\n", author,email);
+        }
     }
     if(tFlag || aFlag || uFlag)
         printf("\n");
@@ -100,6 +107,8 @@ void printItem(char *title, char *time, char *author, char *url, int tFlag, int 
     free(time);
     free(author);
     free(url);
+    if(email != NULL)
+        free(email);
 }
 
 int rssLegacyProcessItem(xmlNode *rssItem, int tFlag, int aFlag, int uFlag){
@@ -127,7 +136,7 @@ int rssLegacyProcessItem(xmlNode *rssItem, int tFlag, int aFlag, int uFlag){
         }
     }
 
-    printItem(title,time,author,url,tFlag,aFlag,uFlag);
+    printItem(title,time,author,NULL,url,tFlag,aFlag,uFlag);
     return 0;
 }
 
@@ -136,7 +145,6 @@ int parseLegacyRss(xmlNode *node, int tFlag, int aFlag, int uFlag){
         fprintf(stderr,"Chyba, nespravny format xml\n");
         return 1;
     }
-    node = node->children;
     for(xmlNode *actNode = node; actNode != NULL;actNode = actNode->next){
         if(xmlStrcmp(actNode->name,(xmlChar *)"channel") == 0) {
             for (xmlNode *actChannel = actNode->children; actChannel != NULL ; actChannel = actChannel->next) {
@@ -147,7 +155,7 @@ int parseLegacyRss(xmlNode *node, int tFlag, int aFlag, int uFlag){
                 }
             }
         }
-        else if(xmlStrcmp(actNode->name,(xmlChar *)"item")){
+        else if(xmlStrcmp(actNode->name,(xmlChar *)"item") == 0){
             rssLegacyProcessItem(actNode->children,tFlag,aFlag,uFlag);
         }
 
@@ -182,7 +190,7 @@ int rssProcessItem(xmlNode *rssItem, int tFlag, int aFlag, int uFlag){
         }
     }
 
-    printItem(title,time,author,url,tFlag,aFlag,uFlag);
+    printItem(title,time,author,NULL,url,tFlag,aFlag,uFlag);
     return 0;
 }
 
@@ -213,6 +221,7 @@ int atomProcessEntry(xmlNode *rssItem, int tFlag, int aFlag, int uFlag){
     char *title = NULL;
     char *time = NULL;
     char *author = NULL;
+    char *email = NULL;
     char *url = NULL;
 
     for (xmlNode *actItem = rssItem; actItem != NULL ; actItem = actItem->next) {
@@ -226,16 +235,24 @@ int atomProcessEntry(xmlNode *rssItem, int tFlag, int aFlag, int uFlag){
             strcpy(time,(char *)actItem->children->content);
         }
         else if(xmlStrcmp(actItem->name,(xmlChar *)"link") == 0){
-            //url = (char *)malloc(strlen((char *)actItem->properties->)+1);
-            //strcpy(url,(char *)actItem->children->content);
-            printf("%s\n",actItem->properties->name);
+            url = (char *)malloc(strlen((char *)actItem->properties->children->content)+1);
+            strcpy(url,(char *)actItem->properties->children->content);
         }
         else if(xmlStrcmp(actItem->name,(xmlChar *)"author") == 0){
-
+            for (xmlNode *actAuthor = actItem->children; actAuthor != NULL; actAuthor = actAuthor->next) {
+                if(xmlStrcmp(actItem->name,(xmlChar *)"name") == 0){
+                    author = (char *)malloc(strlen((char *)actItem->properties->children->content)+1);
+                    strcpy(author,(char *)actItem->properties->children->content);
+                }
+                else if(xmlStrcmp(actItem->name,(xmlChar *)"email") == 0){
+                    email = (char *)malloc(strlen((char *)actItem->properties->children->content)+1);
+                    strcpy(email,(char *)actItem->properties->children->content);
+                }
+            }
         }
     }
 
-    printItem(title,time,author,url,tFlag,aFlag,uFlag);
+    printItem(title,time,author,email,url,tFlag,aFlag,uFlag);
     return 0;
 }
 
@@ -244,13 +261,13 @@ int parseAtom(xmlNode *node, int tFlag, int aFlag, int uFlag){
         fprintf(stderr,"Chyba, nespravny format xml\n");
         return 1;
     }
-    node = node->children;
     for(xmlNode *actNode = node; actNode != NULL;actNode = actNode->next){
+        //printf("%s\n",actNode->name);
         if(xmlStrcmp(actNode->name,(xmlChar *)"title") == 0){
             //if pro chybu
             printf("*** %s ***\n",actNode->children->content);
         }
-        else if(xmlStrcmp(actNode->name,(xmlChar *)"entry")){
+        else if(xmlStrcmp(actNode->name,(xmlChar *)"entry") == 0){
             atomProcessEntry(actNode->children,tFlag,aFlag,uFlag);
         }
 
@@ -263,6 +280,7 @@ int parseAtom(xmlNode *node, int tFlag, int aFlag, int uFlag){
 int parsexml(char *input, int tFlag, int aFlag, int uFlag){
     xmlDoc *feed = NULL;
     xmlNode *root = NULL;
+    printf("\n");
 
     feed = xmlReadDoc((xmlChar *)input,"newurl.org",NULL,0);
 
@@ -276,22 +294,57 @@ int parsexml(char *input, int tFlag, int aFlag, int uFlag){
     else if(xmlStrcmp(root->name,(xmlChar *)"rdf:RDF") == 0){
         parseLegacyRss(root->children, tFlag,aFlag,uFlag);
     }
-
+    printf("\n");
     xmlFreeDoc(feed);
     xmlCleanupParser();
     return 0;
 }
 
+int processBioConn(BIO *bio,char **output){
+    /* Send the request */
+    char *tmpOut = (char *)malloc(1024);
+    memset(tmpOut,0,1024);
+    int skipFlag = 0;
+    int chunkFlag = 0;
+    int p;
+    char tmpbuff[2048];
+    memset(tmpbuff,0,sizeof(tmpbuff));
+
+
+    /* Read in the response */
+    for(;;) {
+        p = BIO_read(bio, tmpbuff, 2047);
+        if(p <= 0)
+            break;
+        if(!skipFlag) {
+            skipFlag = 1;
+            int j = 0;
+            for (int i = analyseHeader(tmpbuff,&chunkFlag); i < strlen(tmpbuff); i++) {
+                tmpOut[j] = tmpbuff[i];
+                j++;
+            }
+            memset(tmpbuff,0,sizeof(tmpbuff));
+            tmpOut = (char *)realloc(tmpOut,strlen(tmpOut)+1);
+            continue;
+        }
+        tmpOut = (char *)realloc(tmpOut,p+strlen(tmpOut)+1);
+        strcat(tmpOut,tmpbuff);
+        memset(tmpbuff,0,sizeof(tmpbuff));
+    }
+    /* Close the connection and free the context */
+    if(chunkFlag){
+        uniteChunks(&tmpOut);
+    }
+    *output = tmpOut;
+    return 0;
+}
 
 //utrzky prevzaty z ibm tutorialu TODO
 int getNoSslFeed(char *hostname, char *fileAddr, char **output){
     BIO * bio;
-    int p;
 
     char * request = (char *)malloc(128+strlen(hostname)+strlen(fileAddr));
-    sprintf(request,"GET %s HTTP/1.1\nHost: %s\nConnection: Close\n\n",fileAddr, hostname);
-    char tmpbuff[1024];
-    memset(tmpbuff,0,sizeof(tmpbuff));
+    sprintf(request,"GET %s HTTP/1.1\r\nHost: %s\r\nConnection: Close\r\n\r\n",fileAddr, hostname);
     /* Set up the library */
 
     ERR_load_BIO_strings();
@@ -311,44 +364,86 @@ int getNoSslFeed(char *hostname, char *fileAddr, char **output){
         BIO_free_all(bio);
         return -1;
     }
-
-    /* Send the request */
-    char *tmpOut = (char *)malloc(1024);
-    memset(tmpOut,0,1024);
-    int skipFlag = 0;
-    int chunkFlag = 0;
     BIO_write(bio, request, strlen(request));
-    /* Read in the response */
-    for(;;) {
-        p = BIO_read(bio, tmpbuff, 1023);
-        if(p <= 0)
-            break;
-       if(!skipFlag) {
-           skipFlag = 1;
-           int j = 0;
-           for (int i = analyseHeader(tmpbuff,&chunkFlag); i < strlen(tmpbuff); i++) {
-               tmpOut[j] = tmpbuff[i];
-               j++;
-           }
-           memset(tmpbuff,0,sizeof(tmpbuff));
-           tmpOut = (char *)realloc(tmpOut,strlen(tmpOut)+1);
-           continue;
-        }
-        tmpOut = (char *)realloc(tmpOut,p+strlen(tmpOut)+1);
-        strcat(tmpOut,tmpbuff);
-        memset(tmpbuff,0,sizeof(tmpbuff));
-    }
-    /* Close the connection and free the context */
-    if(chunkFlag){
-        uniteChunks(&tmpOut);
-    }
-    *output = tmpOut;
+    processBioConn(bio,output);
+
     BIO_free_all(bio);
     free(request);
     return 0;
 }
 
 int getSslFeed(char *hostname, char *fileAddr, TQueue *cert, int certFlag, char **output){
+    BIO * bio;
+    SSL * ssl;
+    SSL_CTX * ctx;
+
+    char * request = (char *)malloc(128+strlen(hostname)+strlen(fileAddr));
+    sprintf(request,"GET %s HTTP/1.1\r\nHost: %s\r\nUser-Agent: Mozilla/5.0\r\nConnection: Close\r\n\r\n", fileAddr, hostname);
+    /* Set up the library */
+
+    ERR_load_BIO_strings();
+    SSL_load_error_strings();
+    OpenSSL_add_all_algorithms();
+
+    /* Set up the SSL context */
+
+    ctx = SSL_CTX_new(SSLv23_client_method());
+
+    /* Load the trust store */
+    if(!certFlag)
+        SSL_CTX_set_default_verify_paths(ctx);
+    else{
+        while(cert->front != NULL){
+            char *queueStr;
+            QueueFrontPop(cert,&queueStr);
+            SSL_CTX_load_verify_locations(ctx,queueStr,0);
+            free(queueStr);
+        }
+    }
+
+    /* Setup the connection */
+
+    bio = BIO_new_ssl_connect(ctx);
+
+    /* Set the SSL_MODE_AUTO_RETRY flag */
+
+    BIO_get_ssl(bio, & ssl);
+    SSL_set_mode(ssl, SSL_MODE_AUTO_RETRY);
+
+    /* Create and setup the connection */
+    strcat(hostname,":https");
+    BIO_set_conn_hostname(bio, hostname);
+
+    if(BIO_do_connect(bio) <= 0)
+    {
+        fprintf(stderr, "Error attempting to connect\n");
+        ERR_print_errors_fp(stderr);
+        BIO_free_all(bio);
+        SSL_CTX_free(ctx);
+        return 0;
+    }
+
+    /* Check the certificate */
+
+    if(SSL_get_verify_result(ssl) != X509_V_OK)
+    {
+        fprintf(stderr, "Certificate verification error: %ld\n", SSL_get_verify_result(ssl));
+        BIO_free_all(bio);
+        SSL_CTX_free(ctx);
+        return 0;
+    }
+
+    /* Send the request */
+
+    BIO_write(bio, request, strlen(request));
+
+    /* Read in the response */
+
+    processBioConn(bio,output);
+
+    /* Close the connection and free the context */
+    free(request);
+    BIO_free_all(bio);
     return 0;
 }
 
