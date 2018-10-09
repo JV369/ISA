@@ -302,8 +302,8 @@ int parsexml(char *input, int tFlag, int aFlag, int uFlag){
 
 int processBioConn(BIO *bio,char **output){
     /* Send the request */
-    char *tmpOut = (char *)malloc(1024);
-    memset(tmpOut,0,1024);
+    char *tmpOut = (char *)malloc(2048);
+    memset(tmpOut,0,2048);
     int skipFlag = 0;
     int chunkFlag = 0;
     int p;
