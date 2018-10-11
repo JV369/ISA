@@ -400,7 +400,7 @@ int getSslFeed(char *hostname, char *fileAddr, TQueue *cert, int certFlag, char 
     SSL_library_init();
     ERR_load_BIO_strings();
     SSL_load_error_strings();
-    OpenSSL_add_all_algorithms();
+    //OpenSSL_add_all_algorithms();
 
     /* Set up the SSL context */
     ctx = SSL_CTX_new(SSLv23_client_method());
