@@ -382,7 +382,7 @@ int getNoSslFeed(char *hostname, char *fileAddr, char **output){
     BIO_write(bio, request, strlen(request));
     processBioConn(bio,output);
 
-    BIO_free_all(bio);
+    BIO_free(bio);
     ERR_free_strings();
     EVP_cleanup();
     free(request);
