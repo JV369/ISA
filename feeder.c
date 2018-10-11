@@ -232,25 +232,25 @@ int atomProcessEntry(xmlNode *rssItem, int tFlag, int aFlag, int uFlag){
 
     for (xmlNode *actItem = rssItem; actItem != NULL ; actItem = actItem->next) {
         //printf("%s\n",actItem->name);
-        if(xmlStrcmp(actItem->name,(xmlChar *)"title") == 0){
+        if(strcmp((char *)actItem->name,"title") == 0){
             title = (char *)malloc(strlen((char *)actItem->children->content)+1);
             strcpy(title,(char *)actItem->children->content);
         }
-        else if(xmlStrcmp(actItem->name,(xmlChar *)"updated") == 0){
+        else if(strcmp((char *)actItem->name,"updated") == 0){
             time = (char *)malloc(strlen((char *)actItem->children->content)+1);
             strcpy(time,(char *)actItem->children->content);
         }
-        else if(xmlStrcmp(actItem->name,(xmlChar *)"link") == 0){
+        else if(strcmp((char *)actItem->name,"link") == 0){
             url = (char *)malloc(strlen((char *)actItem->properties->children->content)+1);
             strcpy(url,(char *)actItem->properties->children->content);
         }
-        else if(xmlStrcmp(actItem->name,(xmlChar *)"author") == 0){
+        else if(strcmp((char *)actItem->name,"author") == 0){
             for (xmlNode *actAuthor = actItem->children; actAuthor != NULL; actAuthor = actAuthor->next) {
-                if(xmlStrcmp(actItem->name,(xmlChar *)"name") == 0){
+                if(strcmp((char *)actItem->name,"name") == 0){
                     author = (char *)malloc(strlen((char *)actItem->properties->children->content)+1);
                     strcpy(author,(char *)actItem->properties->children->content);
                 }
-                else if(xmlStrcmp(actItem->name,(xmlChar *)"email") == 0){
+                else if(strcmp((char *)actItem->name,"email") == 0){
                     email = (char *)malloc(strlen((char *)actItem->properties->children->content)+1);
                     strcpy(email,(char *)actItem->properties->children->content);
                 }
@@ -269,11 +269,11 @@ int parseAtom(xmlNode *node, int tFlag, int aFlag, int uFlag){
     }
     for(xmlNode *actNode = node; actNode != NULL;actNode = actNode->next){
         //printf("%s\n",actNode->name);
-        if(xmlStrcmp(actNode->name,(xmlChar *)"title") == 0){
+        if(strcmp((char *)actNode->name,"title") == 0){
             //if pro chybu
-            printf("*** %s ***\n",actNode->children->content);
+            printf("*** %s ***\n",(char *)actNode->children->content);
         }
-        else if(xmlStrcmp(actNode->name,(xmlChar *)"entry") == 0){
+        else if(strcmp((char *)actNode->name,"entry") == 0){
             atomProcessEntry(actNode->children,tFlag,aFlag,uFlag);
         }
 
