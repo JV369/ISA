@@ -7,7 +7,7 @@ int analyseHeader(char *input,int *chunk){
     int newLine = 0;
     int j = 0;
     for (int i = 0;; i++) {
-        if(input[i] == '\r' && newLine) {
+        if((input[i] == '\r' && newLine)) {
             i+=2;
             free(line);
             return i;
@@ -25,6 +25,11 @@ int analyseHeader(char *input,int *chunk){
             newLine = 1;
             continue;
         }
+        else if(!(input[i])){
+            free(line);
+            return i;
+        }
+
         line[j] = input[i];
         j++;
         newLine = 0;
@@ -49,8 +54,9 @@ int uniteChunks(char **io){
                 j = 0;
                 continue;
             }
-            else if((*io)[i] == '0')
+            else if((*io)[i] == '0' && (*io)[i-1] == '\n' && (*io)[i+1] == '\r') {
                 break;
+            }
             chunkLine[j] = (*io)[i];
             j++;
         }
@@ -314,12 +320,19 @@ int processBioConn(BIO *bio,char **output){
     /* Read in the response */
     for(;;) {
         p = BIO_read(bio, tmpbuff, 2047);
+        printf("%s\n",tmpbuff);
         if(p <= 0)
             break;
         if(!skipFlag) {
             skipFlag = 1;
             int j = 0;
-            for (int i = analyseHeader(tmpbuff,&chunkFlag); i < strlen(tmpbuff); i++) {
+            int skip = analyseHeader(tmpbuff,&chunkFlag);
+            printf("%d\n",skip);
+            if(skip == p) {
+                skipFlag = 0;
+                continue;
+            }
+            for (int i = skip; i < strlen(tmpbuff); i++) {
                 tmpOut[j] = tmpbuff[i];
                 j++;
             }
@@ -332,6 +345,7 @@ int processBioConn(BIO *bio,char **output){
         memset(tmpbuff,0,sizeof(tmpbuff));
     }
     /* Close the connection and free the context */
+    //printf("%s\n",tmpOut);
     if(chunkFlag){
         uniteChunks(&tmpOut);
     }
@@ -381,14 +395,15 @@ int getSslFeed(char *hostname, char *fileAddr, TQueue *cert, int certFlag, char 
     sprintf(request,"GET %s HTTP/1.1\r\nHost: %s\r\nUser-Agent: Mozilla/5.0\r\nConnection: Close\r\n\r\n", fileAddr, hostname);
     /* Set up the library */
 
+    printf("%s\n",request);
+    (void)SSL_library_init();
+    OPENSSL_config(NULL);
     ERR_load_BIO_strings();
     SSL_load_error_strings();
     OpenSSL_add_all_algorithms();
 
     /* Set up the SSL context */
-
-    ctx = SSL_CTX_new(SSLv23_method());
-
+    ctx = SSL_CTX_new(SSLv23_client_method());
     /* Load the trust store */
     if(!certFlag)
         SSL_CTX_set_default_verify_paths(ctx);
@@ -413,7 +428,6 @@ int getSslFeed(char *hostname, char *fileAddr, TQueue *cert, int certFlag, char 
     /* Create and setup the connection */
     strcat(hostname,":https");
     BIO_set_conn_hostname(bio, hostname);
-
     if(BIO_do_connect(bio) <= 0)
     {
         fprintf(stderr, "Error attempting to connect\n");
@@ -434,11 +448,9 @@ int getSslFeed(char *hostname, char *fileAddr, TQueue *cert, int certFlag, char 
     }
 
     /* Send the request */
-
     BIO_write(bio, request, strlen(request));
 
     /* Read in the response */
-
     processBioConn(bio,output);
 
     /* Close the connection and free the context */
@@ -475,7 +487,6 @@ int feedreader(TQueue *url, TQueue *cert, int certFlag, int tFlag, int aFlag, in
             strcat(fileAddr,"/");
             strcat(fileAddr,token);
         }
-
         char *output = 0;
 
         if(ssl){
@@ -484,7 +495,7 @@ int feedreader(TQueue *url, TQueue *cert, int certFlag, int tFlag, int aFlag, in
             getNoSslFeed(hostname,fileAddr,&output);
         }
 
-        //printf("%s\n",output);
+        printf("%s\n",output);
 
         parsexml(output, tFlag, aFlag, uFlag);
         free(activeUrl);

@@ -18,7 +18,8 @@ int loadUrlFile(TQueue *url, char *file){
         if(line[0] == '#'){
             continue;
         }
-        QueueUp(url,line);
+        char *token = strtok(line,"\n");
+        QueueUp(url,token);
     }
 
     if(line != NULL)
@@ -102,6 +103,7 @@ int checkArg(char **arguments,int lenght, TQueue *url, TQueue *cert, int *certFl
             i += skip;
         }
         else if(!urlFlag){
+            //printf("%s\n",arguments[i]);
             QueueUp(url, arguments[i]);
             urlFlag = 1;
         }
