@@ -383,6 +383,7 @@ int getNoSslFeed(char *hostname, char *fileAddr, char **output){
     processBioConn(bio,output);
 
     BIO_free_all(bio);
+    ERR_remove_state(0);
     free(request);
     return 0;
 }
@@ -456,6 +457,7 @@ int getSslFeed(char *hostname, char *fileAddr, TQueue *cert, int certFlag, char 
     /* Close the connection and free the context */
     free(request);
     BIO_free_all(bio);
+    ERR_remove_state(0);
     SSL_CTX_free(ctx);
     return 0;
 }
