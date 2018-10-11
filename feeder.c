@@ -383,6 +383,8 @@ int getNoSslFeed(char *hostname, char *fileAddr, char **output){
     processBioConn(bio,output);
 
     BIO_free_all(bio);
+    ERR_free_strings();
+    EVP_cleanup();
     free(request);
     return 0;
 }
@@ -399,8 +401,8 @@ int getSslFeed(char *hostname, char *fileAddr, TQueue *cert, int certFlag, char 
     printf("%s\n",request);
     SSL_library_init();
     ERR_load_BIO_strings();
-    //SSL_load_error_strings();
-    //OpenSSL_add_all_algorithms();
+    SSL_load_error_strings();
+    OpenSSL_add_all_algorithms();
 
     /* Set up the SSL context */
     ctx = SSL_CTX_new(SSLv23_client_method());
@@ -456,6 +458,8 @@ int getSslFeed(char *hostname, char *fileAddr, TQueue *cert, int certFlag, char 
     /* Close the connection and free the context */
     free(request);
     BIO_free_all(bio);
+    ERR_free_strings();
+    EVP_cleanup();
     SSL_CTX_free(ctx);
     return 0;
 }
