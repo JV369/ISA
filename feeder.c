@@ -456,6 +456,7 @@ int getSslFeed(char *hostname, char *fileAddr, TQueue *cert, int certFlag, char 
     /* Close the connection and free the context */
     free(request);
     BIO_free_all(bio);
+    SSL_CTX_free(ctx);
     return 0;
 }
 
@@ -495,7 +496,7 @@ int feedreader(TQueue *url, TQueue *cert, int certFlag, int tFlag, int aFlag, in
             getNoSslFeed(hostname,fileAddr,&output);
         }
 
-        printf("%s\n",output);
+        //printf("%s\n",output);
 
         parsexml(output, tFlag, aFlag, uFlag);
         free(activeUrl);
