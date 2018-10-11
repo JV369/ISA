@@ -13,7 +13,7 @@ int analyseHeader(char *input,int *chunk){
             return i;
         }
         else if(input[i] == '\r'){
-            printf("%d\n",i);
+            //printf("%d\n",i);
             if(strcmp(line,"Transfer-Encoding: chunked") == 0)
                 *chunk = 1;
             j = 0;
@@ -320,16 +320,16 @@ int processBioConn(BIO *bio,char **output){
     /* Read in the response */
     for(;;) {
         p = BIO_read(bio, tmpbuff, 2047);
-        printf("%s\n",tmpbuff);
+        //printf("%s\n",tmpbuff);
         if(p <= 0)
             break;
         if(!skipFlag) {
             skipFlag = 1;
             int j = 0;
-            printf("\nhue\n");
+
             int skip = analyseHeader(tmpbuff,&chunkFlag);
-            printf("%d\n",skip);
-            printf("%d\n",p);
+            //printf("%d\n",skip);
+            //printf("%d\n",p);
             if(skip == p && p == 2047) {
                 skipFlag = 0;
                 continue;
@@ -479,7 +479,7 @@ int feedreader(TQueue *url, TQueue *cert, int certFlag, int tFlag, int aFlag, in
 
         token = strtok(NULL,"/");
         //velikost adresy hosta + port num
-        char *hostname = (char *)malloc(strlen(token)+4);
+        char *hostname = (char *)malloc(strlen(token)+10);
         strcpy(hostname,token);
         char *fileAddr = (char *)malloc(activeLen - strlen(hostname)+1);
         *fileAddr = 0;
