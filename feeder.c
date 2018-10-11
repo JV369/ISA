@@ -382,7 +382,7 @@ int getNoSslFeed(char *hostname, char *fileAddr, char **output){
     BIO_write(bio, request, strlen(request));
     processBioConn(bio,output);
 
-    BIO_free(bio);
+    BIO_free_all(bio);
     ERR_free_strings();
     EVP_cleanup();
     free(request);
@@ -406,6 +406,8 @@ int getSslFeed(char *hostname, char *fileAddr, TQueue *cert, int certFlag, char 
 
     /* Set up the SSL context */
     ctx = SSL_CTX_new(SSLv23_client_method());
+    const long flags = SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_COMPRESSION;
+    SSL_CTX_set_options(ctx, flags);
     /* Load the trust store */
     if(!certFlag)
         SSL_CTX_set_default_verify_paths(ctx);
