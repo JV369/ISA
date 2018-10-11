@@ -13,7 +13,7 @@ int analyseHeader(char *input,int *chunk){
             return i;
         }
         else if(input[i] == '\r'){
-            //printf("%d\n",i);
+            printf("%d\n",i);
             if(strcmp(line,"Transfer-Encoding: chunked") == 0)
                 *chunk = 1;
             j = 0;
@@ -326,9 +326,11 @@ int processBioConn(BIO *bio,char **output){
         if(!skipFlag) {
             skipFlag = 1;
             int j = 0;
+            printf("\nhue\n");
             int skip = analyseHeader(tmpbuff,&chunkFlag);
             printf("%d\n",skip);
-            if(skip == p) {
+            printf("%d\n",p);
+            if(skip == p && p == 2047) {
                 skipFlag = 0;
                 continue;
             }
@@ -337,7 +339,6 @@ int processBioConn(BIO *bio,char **output){
                 j++;
             }
             memset(tmpbuff,0,sizeof(tmpbuff));
-            tmpOut = (char *)realloc(tmpOut,strlen(tmpOut)+1);
             continue;
         }
         tmpOut = (char *)realloc(tmpOut,p+strlen(tmpOut)+1);
@@ -396,8 +397,7 @@ int getSslFeed(char *hostname, char *fileAddr, TQueue *cert, int certFlag, char 
     /* Set up the library */
 
     printf("%s\n",request);
-    (void)SSL_library_init();
-    OPENSSL_config(NULL);
+    //SSL_library_init();
     ERR_load_BIO_strings();
     SSL_load_error_strings();
     OpenSSL_add_all_algorithms();
