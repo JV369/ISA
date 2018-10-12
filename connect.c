@@ -21,6 +21,7 @@ int analyseHeader(char *input,int *chunk){
         if((input[i] == '\r' && newLine)) {
             i+=2;
             free(line);
+            regfree(&contentType);
             if(pass)
                 return i;
             return -2;
@@ -30,6 +31,7 @@ int analyseHeader(char *input,int *chunk){
             if(!ok){
                 if(strcmp(line,"HTTP/1.1 200 OK") != 0){
                     free(line);
+                    regfree(&contentType);
                     return -2;
                 }
                 ok = 1;
@@ -49,6 +51,7 @@ int analyseHeader(char *input,int *chunk){
         }
         else if(!(input[i])){
             free(line);
+            regfree(&contentType);
             if(!ok)
                 return -2;
             return -1;
@@ -170,6 +173,7 @@ int getNoSslFeed(char *hostname, char *fileAddr, char **output){
     if(regexec(&port,hostname,0,NULL,0))
         strcat(hostname,":80");
     bio = BIO_new_connect(hostname);
+    regfree(&port);
     if(bio == NULL) {
         printf("BIO is null\n");
         ERR_free_strings();
@@ -258,6 +262,7 @@ int getSslFeed(char *hostname, char *fileAddr, char *certFile, char *certAddr, c
     if(regexec(&port,hostname,0,NULL,0))
         strcat(hostname,":https");
     BIO_set_conn_hostname(bio, hostname);
+    regfree(&port);
     if(BIO_do_connect(bio) <= 0)
     {
         fprintf(stderr, "Error attempting to connect\n");
