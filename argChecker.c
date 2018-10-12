@@ -4,6 +4,8 @@
 
 #include "argChecker.h"
 
+regex_t regex;
+
 int loadUrlFile(TQueue *url, char *file){
     FILE *fp;
     fp = fopen(file,"r");
@@ -19,6 +21,9 @@ int loadUrlFile(TQueue *url, char *file){
             continue;
         }
         char *token = strtok(line,"\n");
+        if(regexec(&regex,line,0,NULL,0)) {
+            continue;
+        }
         QueueUp(url,token);
     }
 
@@ -28,34 +33,14 @@ int loadUrlFile(TQueue *url, char *file){
     return 0;
 }
 
-int loadCertDir(TQueue *cert,char *dir){
-    struct dirent *dirIn;
-    DIR *dp;
-    dp = opendir(dir);
-    if(dp == NULL){
-        fprintf(stderr, "Chyba pri otevirani adresare s certifikatama\n");
-    }
-
-    while ((dirIn = readdir(dp)) != NULL){
-        char *str = (char *)malloc(strlen(dir)+strlen(dirIn->d_name)+2);
-        strcpy(str,dir);
-        //strcat(str,"#");
-        strcat(str,dirIn->d_name);
-        QueueUp(cert,str);
-        free(str);
-    }
-    closedir(dp);
-    return 0;
-
-}
-
 /**
  * vlastní getopt
  */
-int checkArg(char **arguments,int lenght, TQueue *url, TQueue *cert, int *certFlag, int *tFlag, int *aFlag, int *uFlag){
+int checkArg(char **arguments,int lenght, TQueue *url, char *certFile,char *certAddr, int *tFlag, int *aFlag, int *uFlag){
     int urlFlag = 0;
     int urlFFlag = 0;
     int position = 1;
+    regcomp(&regex, "^https?://.+(:[0-9]+)?/.*",REG_EXTENDED);
     for (int i = 1; i < lenght; i++) {
         if (arguments[i][0] == '-') {
             int ops = 1;
@@ -63,27 +48,18 @@ int checkArg(char **arguments,int lenght, TQueue *url, TQueue *cert, int *certFl
             for (int k = 1; k < strlen(arguments[i]); k++) {
                 if (arguments[i][k] == 'f') {
                     loadUrlFile(url, arguments[i + ops]);
-                    urlFFlag = 1;
+                    if(url->front != NULL)
+                        urlFFlag = 1;
                     ops++;
                     skip++;
                 } else if (arguments[i][k] == 'c'){
-                    QueueUp(url, arguments[i + 1]);
-                    *certFlag = 1;
+                    certFile = (char *)malloc(strlen(arguments[i + ops])+1);
+                    strcpy(certFile,arguments[i + ops]);
                     skip++;
                     ops++;
                 } else if (arguments[i][k] == 'C') {
-                    int j = 0;
-                    while (arguments[i + 1][j] != '\0')
-                        j++;
-                    if (arguments[i + 1][j - 1] != '/') {
-                        char *str = (char *) malloc(strlen(arguments[i + 1]) + 2);
-                        strcpy(str, arguments[i + 1]);
-                        strcat(str, "/");
-                        loadCertDir(cert, str);
-                        free(str);
-                    } else
-                        loadCertDir(cert, arguments[i + 1]);
-                    *certFlag = 1;
+                    certAddr = (char *)malloc(strlen(arguments[i + ops])+1);
+                    strcpy(certAddr,arguments[i + ops]);
                     skip++;
                     ops++;
                 } else if (arguments[i][k] == 'T') {
@@ -104,6 +80,10 @@ int checkArg(char **arguments,int lenght, TQueue *url, TQueue *cert, int *certFl
         }
         else if(!urlFlag){
             //printf("%s\n",arguments[i]);
+            if(regexec(&regex,arguments[i],0,NULL,0)) {
+                fprintf(stderr,"Chyba: nesprávný formát adresy");
+                continue;
+            }
             QueueUp(url, arguments[i]);
             urlFlag = 1;
         }
@@ -111,11 +91,12 @@ int checkArg(char **arguments,int lenght, TQueue *url, TQueue *cert, int *certFl
     if(!urlFlag && !urlFFlag){
         char *line = NULL;
         size_t size = 0;
-        printf("Nezadal jste adresu pro cteni. Prosim zadejte adresu.\n");
+        printf("Nezadal jste platnou adresu pro cteni. Prosim zadejte adresu.\n");
         getline(&line,&size,stdin);
         QueueUp(url,line);
         if(line != NULL)
             free(line);
     }
+    regfree(&regex);
     return 0;
 }
