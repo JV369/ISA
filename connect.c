@@ -243,6 +243,7 @@ int getSslFeed(char *hostname, char *fileAddr, char *certFile, char *certAddr, c
     const long flags = SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_COMPRESSION;
     SSL_CTX_set_options(ctx, flags);
     /* Load the trust store */
+    //printf("%s\n",certAddr);
     if(certFile == NULL && certAddr == NULL)
         SSL_CTX_set_default_verify_paths(ctx);
     else{

@@ -61,21 +61,21 @@ int rdfProcessItem(xmlNode *rssItem, int tFlag, int aFlag, int uFlag){
             url = (char *)malloc(strlen((char *)actItem->children->content)+1);
             strcpy(url,(char *)actItem->children->content);
         }
-        else if(xmlStrcmp(actItem->name,(xmlChar *)"dc:creator") == 0){
-            if(xmlStrcmp(actItem->properties->name,(xmlChar *)"rdf:parseType") == 0){
+        else if(xmlStrcmp(actItem->name,(xmlChar *)"creator") == 0){
+            if(xmlStrcmp(actItem->children->name,(xmlChar *)"name") == 0){
                 for (xmlNode *tmp = actItem->children; tmp != NULL; tmp = tmp->next) {
-                    if(xmlStrcmp(actItem->name,(xmlChar *)"name") == 0){
+                    if(xmlStrcmp(tmp->name,(xmlChar *)"name") == 0){
                         char *firstName = NULL;
                         char *middleName = NULL;
                         char *lastName = NULL;
                         for (xmlNode *authorName = tmp->children;authorName != NULL;authorName = authorName->next) {
-                            if(xmlStrcmp(actItem->name,(xmlChar *)"firstname") == 0){
+                            if(xmlStrcmp(authorName->name,(xmlChar *)"firstname") == 0){
                                 firstName = (char *)authorName->children->content;
                             }
-                            else if(xmlStrcmp(actItem->name,(xmlChar *)"middle_initial") == 0){
+                            else if(xmlStrcmp(authorName->name,(xmlChar *)"middle_initial") == 0){
                                 middleName = (char *)authorName->children->content;
                             }
-                            else if(xmlStrcmp(actItem->name,(xmlChar *)"middle_initial") == 0){
+                            else if(xmlStrcmp(authorName->name,(xmlChar *)"middle_initial") == 0){
                                 lastName = (char *)authorName->children->content;
                             }
                         }
@@ -130,9 +130,9 @@ int parseRdf(xmlNode *node, int tFlag, int aFlag, int uFlag){
     for(xmlNode *actNode = node; actNode != NULL;actNode = actNode->next){
         if(xmlStrcmp(actNode->name,(xmlChar *)"channel") == 0) {
             for (xmlNode *actChannel = actNode->children; actChannel != NULL ; actChannel = actChannel->next) {
-                if(xmlStrcmp(actNode->name,(xmlChar *)"title") == 0){
+                if(xmlStrcmp(actChannel->name,(xmlChar *)"title") == 0){
                     //if pro chybu
-                    printf("*** %s ***\n",actNode->children->content);
+                    printf("*** %s ***\n",actChannel->children->content);
                     break;
                 }
             }
@@ -283,7 +283,7 @@ int parsexml(char *input, int tFlag, int aFlag, int uFlag){
     else if(xmlStrcmp(root->name,(xmlChar *)"feed") == 0){
         parseAtom(root->children, tFlag,aFlag,uFlag);
     }
-    else if(xmlStrcmp(root->name,(xmlChar *)"rdf:RDF") == 0){
+    else if(xmlStrcmp(root->name,(xmlChar *)"RDF") == 0){
         parseRdf(root->children, tFlag,aFlag,uFlag);
     }
     else{
