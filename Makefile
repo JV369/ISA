@@ -1,4 +1,6 @@
-ALL: feedreader
+.PHONY: all clean test
+
+all: feedreader
 
 feedreader:
 	gcc -g -std=gnu99 -Wall -pedantic `xml2-config --cflags` -o $(@) queue.c argChecker.c main.c feeder.c connect.c -lpthread -lcrypto -lssl -I/usr/include/libxml2 -lxml2 `xml2-config --libs`
@@ -8,3 +10,6 @@ zip:
 clean:
 	rm -f feedreader
 
+test:
+	chmod +x test.sh
+	./test.sh

@@ -15,13 +15,14 @@ int analyseHeader(char *input,int *chunk){
     char *line = (char *)malloc(1024);
     memset(line,0,1024);
     regex_t contentType;
-    regcomp(&contentType,"^Content-Type: .*/xml; .*",REG_EXTENDED);
+    regcomp(&contentType,"^Content-Type: .*/.*xml.*",REG_EXTENDED);
     int j = 0;
     for (int i = 0;; i++) {
         if((input[i] == '\r' && newLine)) {
             i+=2;
             free(line);
             regfree(&contentType);
+            //printf("%d %d\n",ok,pass);
             if(pass)
                 return i;
             return -2;
@@ -352,15 +353,9 @@ int feedreader(TQueue *url, char *certFile, char *certAddr, int tFlag, int aFlag
         }
 
         //printf("%s\n",output);
-        retVal = parsexml(output, tFlag, aFlag, uFlag);
-        if(retVal){
-            free(activeUrl);
-            free(hostname);
-            free(fileAddr);
-            free(output);
-            return retVal;
-        }
-
+        parsexml(output, tFlag, aFlag, uFlag);
+        if(url->front != NULL)
+            printf("\n");
         free(activeUrl);
         free(hostname);
         free(fileAddr);

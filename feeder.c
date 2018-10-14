@@ -271,6 +271,12 @@ int parsexml(char *input, int tFlag, int aFlag, int uFlag){
     feed = xmlReadDoc((xmlChar *)input,"newurl.org",NULL,0);
 
     root = xmlDocGetRootElement(feed);
+    if(root == NULL){
+        fprintf(stderr,"Nesprávný formát xml\n");
+        xmlFreeDoc(feed);
+        xmlCleanupParser();
+        return 52;
+    }
     if(xmlStrcmp(root->name,(xmlChar *)"rss") == 0){
         parseRss(root->children, tFlag,aFlag,uFlag);
     }
@@ -284,7 +290,6 @@ int parsexml(char *input, int tFlag, int aFlag, int uFlag){
         fprintf(stderr,"Chyba při rozpoznávání xml templatu\n");
         return 51;
     }
-    printf("\n");
     xmlFreeDoc(feed);
     xmlCleanupParser();
     return 0;
