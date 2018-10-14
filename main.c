@@ -10,7 +10,7 @@ int main(int argc, char* argv[]) {
     int aFlag = 0;
     int uFlag = 0;
     QueueInit(url);
-    if(checkArg(argv,argc,url,certFile,certAddr,&tFlag,&aFlag,&uFlag)) {
+    if(checkArg(argv,argc,url,&certFile,&certAddr,&tFlag,&aFlag,&uFlag)) {
         QueueDestroy(url);
         free(url);
         return 30;

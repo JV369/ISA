@@ -36,7 +36,7 @@ int loadUrlFile(TQueue *url, char *file){
 /**
  * vlastní getopt
  */
-int checkArg(char **arguments,int lenght, TQueue *url, char *certFile,char *certAddr, int *tFlag, int *aFlag, int *uFlag){
+int checkArg(char **arguments,int lenght, TQueue *url, char **certFile,char **certAddr, int *tFlag, int *aFlag, int *uFlag){
     int urlFlag = 0;
     int urlFFlag = 0;
     int position = 1;
@@ -53,13 +53,13 @@ int checkArg(char **arguments,int lenght, TQueue *url, char *certFile,char *cert
                     ops++;
                     skip++;
                 } else if (arguments[i][k] == 'c'){
-                    certFile = (char *)malloc(strlen(arguments[i + ops])+1);
-                    strcpy(certFile,arguments[i + ops]);
+                    *certFile = (char *)malloc(strlen(arguments[i + ops])+1);
+                    strcpy(*certFile,arguments[i + ops]);
                     skip++;
                     ops++;
                 } else if (arguments[i][k] == 'C') {
-                    certAddr = (char *)malloc(strlen(arguments[i + ops])+1);
-                    strcpy(certAddr,arguments[i + ops]);
+                    *certAddr = (char *)malloc(strlen(arguments[i + ops])+1);
+                    strcpy(*certAddr,arguments[i + ops]);
                     skip++;
                     ops++;
                 } else if (arguments[i][k] == 'T') {
