@@ -1,5 +1,18 @@
 #include "feeder.h"
 
+int loadValue(xmlNode *node, char **str){
+    if(node->children == NULL && xmlStrcmp(node->name,(xmlChar *)"text") == 0
+       && node->children->next != NULL && node->children->content == NULL){
+        fprintf(stderr,"Chyba, nespravny format xml\n");
+        return 1;
+    }
+    if(str == NULL){
+        return 0;
+    }
+    *str = (char *)malloc(strlen((char *)node->children->content)+1);
+    strcpy(*str,(char *)node->children->content);
+    return 0;
+}
 
 void printItem(char *title, char *time, char *author, char *email,char *url, int tFlag, int aFlag, int uFlag){
     if(title == NULL){
@@ -54,12 +67,12 @@ int rdfProcessItem(xmlNode *rssItem, int tFlag, int aFlag, int uFlag){
     for (xmlNode *actItem = rssItem; actItem != NULL ; actItem = actItem->next) {
         //printf("%s\n",actItem->name);
         if(xmlStrcmp(actItem->name,(xmlChar *)"title") == 0){
-            title = (char *)malloc(strlen((char *)actItem->children->content)+1);
-            strcpy(title,(char *)actItem->children->content);
+            if(loadValue(actItem,&title))
+                continue;
         }
         else if(xmlStrcmp(actItem->name,(xmlChar *)"link") == 0){
-            url = (char *)malloc(strlen((char *)actItem->children->content)+1);
-            strcpy(url,(char *)actItem->children->content);
+            if(loadValue(actItem,&url))
+                continue;
         }
         else if(xmlStrcmp(actItem->name,(xmlChar *)"creator") == 0){
             if(xmlStrcmp(actItem->children->name,(xmlChar *)"name") == 0){
@@ -125,13 +138,22 @@ int rdfProcessItem(xmlNode *rssItem, int tFlag, int aFlag, int uFlag){
 int parseRdf(xmlNode *node, int tFlag, int aFlag, int uFlag){
     if(node == NULL){
         fprintf(stderr,"Chyba, nespravny format xml\n");
-        return 1;
+        return 51;
     }
     for(xmlNode *actNode = node; actNode != NULL;actNode = actNode->next){
-        if(xmlStrcmp(actNode->name,(xmlChar *)"channel") == 0) {
+        if(actNode->name == NULL){
+            fprintf(stderr,"Chyba, nespravny format xml\n");
+            return 51;
+        }
+        else if(xmlStrcmp(actNode->name,(xmlChar *)"channel") == 0) {
             for (xmlNode *actChannel = actNode->children; actChannel != NULL ; actChannel = actChannel->next) {
-                if(xmlStrcmp(actChannel->name,(xmlChar *)"title") == 0){
-                    //if pro chybu
+                if(actChannel->name == NULL){
+                    fprintf(stderr,"Chyba, nespravny format xml\n");
+                    return 51;
+                }
+                else if(xmlStrcmp(actChannel->name,(xmlChar *)"title") == 0){
+                    if(loadValue(actChannel,NULL))
+                        return 51;
                     printf("*** %s ***\n",actChannel->children->content);
                     break;
                 }
@@ -153,22 +175,38 @@ int rssProcessItem(xmlNode *rssItem, int tFlag, int aFlag, int uFlag){
     char *url = NULL;
 
     for (xmlNode *actItem = rssItem; actItem != NULL ; actItem = actItem->next) {
-        //printf("%s\n",actItem->name);
         if(xmlStrcmp(actItem->name,(xmlChar *)"title") == 0){
-            title = (char *)malloc(strlen((char *)actItem->children->content)+1);
-            strcpy(title,(char *)actItem->children->content);
+            if(loadValue(actItem,&title))
+                continue;
         }
         else if(xmlStrcmp(actItem->name,(xmlChar *)"pubDate") == 0){
-            time = (char *)malloc(strlen((char *)actItem->children->content)+1);
-            strcpy(time,(char *)actItem->children->content);
+            if(loadValue(actItem,&time))
+                continue;
+        }
+        else if(xmlStrcmp(actItem->name,(xmlChar *)"link") == 0){
+            if(loadValue(actItem,&url))
+                continue;
         }
         else if(xmlStrcmp(actItem->name,(xmlChar *)"guid") == 0){
-            url = (char *)malloc(strlen((char *)actItem->children->content)+1);
-            strcpy(url,(char *)actItem->children->content);
+            int isPermaLink = 0;
+            for (xmlAttr *actGUID = actItem->properties; actGUID != NULL ; actGUID = actGUID->next) {
+                if(xmlStrcmp(actGUID->name,(xmlChar *)"isPermaLink") == 0) {
+                    if (loadValue((xmlNode *) actGUID, NULL))
+                        break;
+                    if (xmlStrcmp(actGUID->children->content, (xmlChar *) "true") == 0)
+                        isPermaLink = 1;
+                }
+            }
+            if(isPermaLink){
+                if(url != NULL)
+                    free(url);
+                if(loadValue(actItem,&url))
+                    continue;
+            }
         }
         else if(xmlStrcmp(actItem->name,(xmlChar *)"author") == 0){
-            author = (char *)malloc(strlen((char *)actItem->children->content)+1);
-            strcpy(author,(char *)actItem->children->content);
+            if(loadValue(actItem,&author))
+                continue;
         }
     }
 
@@ -186,8 +224,13 @@ int parseRss(xmlNode *node, int tFlag, int aFlag, int uFlag){
     }
     node = node->children;
     for(xmlNode *actNode = node; actNode != NULL;actNode = actNode->next){
-        if(xmlStrcmp(actNode->name,(xmlChar *)"title") == 0){
-            //if pro chybu
+        if(actNode->name == NULL){
+            fprintf(stderr,"Chyba, nespravny format xml\n");
+            return 1;
+        }
+        else if(xmlStrcmp(actNode->name,(xmlChar *)"title") == 0){
+            if(loadValue(actNode,NULL))
+                return 51;
             printf("*** %s ***\n",actNode->children->content);
         }
         else if(xmlStrcmp(actNode->name,(xmlChar *)"item") == 0){
@@ -209,31 +252,34 @@ int atomProcessEntry(xmlNode *rssItem, int tFlag, int aFlag, int uFlag){
     for (xmlNode *actItem = rssItem; actItem != NULL ; actItem = actItem->next) {
         //printf("%s\n",actItem->name);
         if(xmlStrcmp(actItem->name,(xmlChar *)"title") == 0){
-            title = (char *)malloc(strlen((char *)actItem->children->content)+1);
-            strcpy(title,(char *)actItem->children->content);
+            if(loadValue(actItem,&title))
+                continue;
         }
         else if(xmlStrcmp(actItem->name,(xmlChar *)"updated") == 0){
-            time = (char *)malloc(strlen((char *)actItem->children->content)+1);
-            strcpy(time,(char *)actItem->children->content);
+            if(loadValue(actItem,&time))
+                continue;
         }
         else if(xmlStrcmp(actItem->name,(xmlChar *)"link") == 0){
+            if(actItem->properties == NULL){
+                fprintf(stderr,"Chyba, nespravny format xml\n");
+                continue;
+            }
             for (xmlAttr *actUrl = actItem->properties; actUrl != NULL ; actUrl = actUrl->next) {
                 if(xmlStrcmp(actUrl->name,(xmlChar *)"href") == 0){
-                    url = (char *)malloc(strlen((char *)actUrl->children->content)+1);
-                    strcpy(url,(char *)actUrl->children->content);
+                    if(loadValue((xmlNode *)actUrl,&url))
+                        continue;
                 }
             }
         }
         else if(xmlStrcmp(actItem->name,(xmlChar *)"author") == 0){
             for (xmlNode *actAuthor = actItem->children; actAuthor != NULL; actAuthor = actAuthor->next) {
                 if(xmlStrcmp(actAuthor->name,(xmlChar *)"name") == 0){
-                    //printf("hue\n");
-                    author = (char *)malloc(strlen((char *)actAuthor->children->content)+1);
-                    strcpy(author,(char *)actAuthor->children->content);
+                    if(loadValue(actAuthor,&author))
+                        continue;
                 }
                 else if(xmlStrcmp(actAuthor->name,(xmlChar *)"email") == 0){
-                    email = (char *)malloc(strlen((char *)actAuthor->children->content)+1);
-                    strcpy(email,(char *)actAuthor->children->content);
+                    if(loadValue(actAuthor,&email))
+                        continue;
                 }
             }
         }
@@ -250,8 +296,13 @@ int parseAtom(xmlNode *node, int tFlag, int aFlag, int uFlag){
     }
     for(xmlNode *actNode = node; actNode != NULL;actNode = actNode->next){
         //printf("%s\n",actNode->name);
-        if(xmlStrcmp(actNode->name,(xmlChar *)"title") == 0){
-            //if pro chybu
+        if(actNode->name == NULL){
+            fprintf(stderr,"Chyba, nespravny format xml\n");
+            return 1;
+        }
+        else if(xmlStrcmp(actNode->name,(xmlChar *)"title") == 0){
+            if(loadValue(actNode,NULL))
+                return 51;
             printf("*** %s ***\n",actNode->children->content);
         }
         else if(xmlStrcmp(actNode->name,(xmlChar *)"entry") == 0){
@@ -272,12 +323,12 @@ int parsexml(char *input, int tFlag, int aFlag, int uFlag){
 
     root = xmlDocGetRootElement(feed);
     if(root == NULL){
-        fprintf(stderr,"Nesprávný formát xml\n");
+        fprintf(stderr,"Chyba při načítání xml\n");
         xmlFreeDoc(feed);
         xmlCleanupParser();
         return 52;
     }
-    if(xmlStrcmp(root->name,(xmlChar *)"rss") == 0){
+    else if(xmlStrcmp(root->name,(xmlChar *)"rss") == 0){
         parseRss(root->children, tFlag,aFlag,uFlag);
     }
     else if(xmlStrcmp(root->name,(xmlChar *)"feed") == 0){
