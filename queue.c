@@ -1,5 +1,5 @@
 /**
- * Kod pro frontu
+ * Kod pro frontu - převzato z mého IPK projektu 2
  * Autor: Jan Vávra
  * Login: xvavra20
  */
@@ -16,7 +16,7 @@ void QueueInit(TQueue *queue){
 void QueueUp(TQueue *queue,char *str){
     TQElem newElem = (TQElem)malloc(sizeof(struct QElem));
 
-    newElem->str = (char *)malloc(strlen(str)+1);
+    newElem->str = calloc(strlen(str)+1,sizeof(char *));
     strcpy(newElem->str,str);
     newElem->next = NULL;
     if(queue->front != NULL){

@@ -1,5 +1,5 @@
 /**
- * Hlavičkový soubor pro frontu
+ * Hlavičkový soubor pro frontu - převzato z mého IPK projektu 2
  * Autor: Jan Vávra
  * Login: xvavra20
  */

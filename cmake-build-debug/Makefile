@@ -150,6 +150,33 @@ argChecker.c.s:
 	$(MAKE) -f CMakeFiles/ISA.dir/build.make CMakeFiles/ISA.dir/argChecker.c.s
 .PHONY : argChecker.c.s
 
+connect.o: connect.c.o
+
+.PHONY : connect.o
+
+# target to build an object file
+connect.c.o:
+	$(MAKE) -f CMakeFiles/ISA.dir/build.make CMakeFiles/ISA.dir/connect.c.o
+.PHONY : connect.c.o
+
+connect.i: connect.c.i
+
+.PHONY : connect.i
+
+# target to preprocess a source file
+connect.c.i:
+	$(MAKE) -f CMakeFiles/ISA.dir/build.make CMakeFiles/ISA.dir/connect.c.i
+.PHONY : connect.c.i
+
+connect.s: connect.c.s
+
+.PHONY : connect.s
+
+# target to generate assembly for a file
+connect.c.s:
+	$(MAKE) -f CMakeFiles/ISA.dir/build.make CMakeFiles/ISA.dir/connect.c.s
+.PHONY : connect.c.s
+
 feeder.o: feeder.c.o
 
 .PHONY : feeder.o
@@ -243,6 +270,9 @@ help:
 	@echo "... argChecker.o"
 	@echo "... argChecker.i"
 	@echo "... argChecker.s"
+	@echo "... connect.o"
+	@echo "... connect.i"
+	@echo "... connect.s"
 	@echo "... feeder.o"
 	@echo "... feeder.i"
 	@echo "... feeder.s"

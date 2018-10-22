@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+   <feed xmlns="http://www.w3.org/2005/Atom">
+
+     <title>Test</title>
+     <id>https://tools.ietf.org/dailydose/</id>
+     <updated>674321831864</updated>
+
+     <entry>
+       <title>Test entry</title>
+       <link href="http://hue.org"/>
+	<author>
+		<name>JV</name>
+	</author>
+	<id>gzrhdjgklanmwpf</id>
+	<updated>2003-12-13T18:30:02Z</updated>
+     </entry>
+
+      <entry>
+       <title>Test entry 2</title>
+	<author>
+		<name>Jörvearick</name>
+	</author>
+	<id>theid</id>
+	<updated>2003-12-13T18:30:02Z</updated>
+       <link href="http://hue.com"/>
+     </entry>
+
+   </feed>

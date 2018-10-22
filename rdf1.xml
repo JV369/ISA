@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:prd="http://purl.org/dc/elements/1.1/" xmlns="http://purl.org/rss/1.0/">
+
+  <channel rdf:about="http://www.xml.com/xml/news.rss">
+    <title>Test RDF</title>
+    <link>http://xml.com/pub</link>
+    <description>
+      XML.com features a rich mix of information and services 
+      for the XML community.
+    </description>
+      <items>
+      <rdf:Seq>
+        <rdf:li resource="http://xml.com/pub/2000/08/09/xslt/xslt.html" />
+	<rdf:li resource="http://xml.com/pub/2000/08/09/rdfdb/index.html" />	
+      </rdf:Seq>
+    </items>
+  </channel>
+  
+
+  <item rdf:about="http://xml.com/pub/2000/08/09/xslt/xslt.html">
+    <title>Test item RDF</title> 
+    <link>http://c.moreover.com/click/here.pl?r123</link>
+    <prd:description>
+      XML is placing increasingly heavy loads on the existing technical
+      infrastructure of the Internet.
+    </prd:description>
+    <prd:creator>JV</prd:creator>
+  </item>
+  
+  <item rdf:about="http://xml.com/pub/2000/08/09/rdfdb/index.html">
+    <title>Test item RDF2</title>
+    <link>http://huerdf.com</link>
+    <prd:description>
+     Tool and API support for the Resource Description Framework 
+     is slowly coming of age. Edd Dumbill takes a look at RDFDB, 
+     one of the most exciting new RDF toolkits.
+    </prd:description>
+	<prd:creator>Hue</prd:creator>
+  </item>
+
+</rdf:RDF>

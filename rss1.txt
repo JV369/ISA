@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://purl.org/rss/1.0/">
+
+  <channel rdf:about="http://www.xml.com/xml/news.rss">
+    <title>Test RDF</title>
+    <link>http://xml.com/pub</link>
+    <description>
+      XML.com features a rich mix of information and services 
+      for the XML community.
+    </description>
+  </channel>
+  
+  <item rdf:about="http://xml.com/pub/2000/08/09/xslt/xslt.html">
+    <title>Test item RDF</title>
+    <link>http://huerdf.com</link>
+    <description>
+     Processing document inclusions with general XML tools can be 
+     problematic. This article proposes a way of preserving inclusion 
+     information through SAX-based processing.
+    </description>
+    <dc:creator>JV<dc:creator>
+  </item>
+  
+  <item rdf:about="http://xml.com/pub/2000/08/09/rdfdb/index.html">
+    <title>Test item RDF2</title>
+    <link>http://huerdf.com</link>
+    <description>
+     Tool and API support for the Resource Description Framework 
+     is slowly coming of age. Edd Dumbill takes a look at RDFDB, 
+     one of the most exciting new RDF toolkits.
+    </description>
+	<dc:creator rdf:parseType="Literal">
+	  <name>
+	    <firstname>Jan</firstname>
+	    <middle_initial>JV</middle_initial>
+	    <lastname>Vávra</lastname>
+	  </name>
+	</dc:creator>
+  </item>
+
+</rdf:RDF>
