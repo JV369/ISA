@@ -1,11 +1,11 @@
-.PHONY: all clean test
+.PHONY: all feedreader clean test
 
 all: feedreader
 
 feedreader:
-	gcc -g -std=gnu99 -Wall -pedantic `xml2-config --cflags` -o $(@) queue.c argChecker.c main.c feeder.c connect.c -lpthread -lcrypto -lssl -I/usr/include/libxml2 -lxml2 `xml2-config --libs`
-zip:
-	zip xvavra20.zip main.c queue.h queue.c Makefile
+	gcc -std=gnu99 -Wall -pedantic `xml2-config --cflags` -o $(@) queue.c argChecker.c main.c feeder.c connect.c -lpthread -lcrypto -lssl -I/usr/include/libxml2 -lxml2 `xml2-config --libs`
+tar:
+	tar -cvf xvavra20.tar *.c *.h  Makefile manual.pdf README.md test.sh test/*
 
 clean:
 	rm -f feedreader

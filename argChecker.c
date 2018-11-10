@@ -24,6 +24,8 @@ int loadUrlFile(TQueue *url, char *file){
     }
 
     size_t size = 0;
+    regex_t multipleUrl;
+    regcomp(&multipleUrl,".* .*",REG_EXTENDED);
     char *line = NULL;
     while((getline(&line,&size,fp)) != -1){
         //ignorování zakomentovaných řádků
@@ -34,11 +36,27 @@ int loadUrlFile(TQueue *url, char *file){
         if(regexec(&regex,line,0,NULL,0)) {
             continue;
         }
-        QueueUp(url,token);
+        //když jsou na řádku více možných url
+        else if(!regexec(&multipleUrl,line,0,NULL,0)){
+            char *tokUrl = strtok(line," ");
+            do{
+                if(tokUrl[0] == '#'){
+                    break;
+                }
+                else if(regexec(&regex,tokUrl,0,NULL,0)) {
+                    continue;
+                }
+                QueueUp(url,tokUrl);
+                tokUrl = strtok(NULL," ");
+            }while(tokUrl != NULL);
+        }
+        else
+            QueueUp(url,token);
     }
 
     if(line != NULL)
         free(line);
+    regfree(&multipleUrl);
     fclose(fp);
     return 0;
 }
@@ -124,7 +142,7 @@ int checkArg(char **arguments,int lenght, TQueue *url, char **certFile,char **ce
                 }
                 //jakýkoli jiný flag je špatný -> chyba
                 else{
-                    fprintf(stderr,"Chyba spatny prepinac");
+                    fprintf(stderr,"Chyba spatny prepinac\n");
                     help();
                     return -1;
                 }
@@ -134,8 +152,7 @@ int checkArg(char **arguments,int lenght, TQueue *url, char **certFile,char **ce
         else if(!urlFlag){
             //printf("%s\n",arguments[i]);
             if(regexec(&regex,arguments[i],0,NULL,0)) {
-                fprintf(stderr,"Chyba: nesprávný formát adresy");
-                help();
+                fprintf(stderr,"Chyba: nesprávný formát adresy\n");
                 continue;
             }
             QueueUp(url, arguments[i]);

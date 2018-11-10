@@ -163,6 +163,7 @@ int processBioConn(BIO *bio,char **output){
             }
             //pokud je vráceno -2, hlavička není správně
             else if(skip == -2){
+                fprintf(stderr,"Chyba: hlavička nemá platný formát\n");
                 free(tmpOut);
                 return 1;
             }
@@ -186,8 +187,11 @@ int processBioConn(BIO *bio,char **output){
     return 0;
 }
 
-//utrzky prevzaty z ibm tutorialu TODO
 /**
+ * Části této funkce byly převzaty z Secure programming with the OpenSSL API
+ * Autor : Kenneth Ballard
+ * Link na článek: https://developer.ibm.com/tutorials/l-openssl/
+ *
  * Připojení bez ssl
  * @param hostname - adresa hosta
  * @param fileAddr - část adresy (umístění souboru)
@@ -214,16 +218,17 @@ int getNoSslFeed(char *hostname, char *fileAddr, char **output){
     bio = BIO_new_connect(hostname);
     regfree(&port);
     if(bio == NULL) {
-        printf("BIO is null\n");
+        fprintf(stderr,"BIO soket nebyl alokován\n");
         ERR_free_strings();
         EVP_cleanup();
         free(request);
         return 32;
     }
-
+    
     //připojení k serveru
     if(BIO_do_connect(bio) <= 0) {
-        ERR_print_errors_fp(stderr);
+        char *tmp = strtok(hostname,":");
+        fprintf(stderr,"Chyba při připojení na server http://%s%s\n",tmp,fileAddr);
         BIO_free_all(bio);
         ERR_free_strings();
         EVP_cleanup();
@@ -233,7 +238,7 @@ int getNoSslFeed(char *hostname, char *fileAddr, char **output){
 
     // zaslání požadavku
     if(BIO_write(bio, request, (int)strlen(request)) != strlen(request)){
-        ERR_print_errors_fp(stderr);
+        fprintf(stderr,"Chyba při zasílání požadavku \n");
         BIO_free_all(bio);
         ERR_free_strings();
         EVP_cleanup();
@@ -243,7 +248,6 @@ int getNoSslFeed(char *hostname, char *fileAddr, char **output){
 
     //přečtení výstupu
     if(processBioConn(bio,output)){
-        ERR_print_errors_fp(stderr);
         BIO_free_all(bio);
         ERR_free_strings();
         EVP_cleanup();
@@ -258,8 +262,12 @@ int getNoSslFeed(char *hostname, char *fileAddr, char **output){
     free(request);
     return 0;
 }
-//ibm tutorial TODO
+
 /**
+ * Části této funkce byly převzaty z Secure programming with the OpenSSL API
+ * Autor : Kenneth Ballard
+ * Link na článek: https://developer.ibm.com/tutorials/l-openssl/
+ *
  * Připojení s ssl
  * @param hostname - adresa hosta
  * @param fileAddr - část adresy (umístění souboru)
@@ -319,28 +327,32 @@ int getSslFeed(char *hostname, char *fileAddr, char *certFile, char *certAddr, c
     //připojení
     if(BIO_do_connect(bio) <= 0)
     {
-        fprintf(stderr, "Error attempting to connect\n");
+        char *tmp = strtok(hostname,":");
+        fprintf(stderr,"Chyba při připojení na server https://%s%s\n",tmp,fileAddr);
         BIO_free_all(bio);
         SSL_CTX_free(ctx);
         ERR_free_strings();
         EVP_cleanup();
+        free(request);
         return 32;
     }
 
     //Kontrola certifikátů
     if(SSL_get_verify_result(ssl) != X509_V_OK)
     {
-        fprintf(stderr, "Certificate verification error: %ld\n", SSL_get_verify_result(ssl));
+        char *tmp = strtok(hostname,":");
+        fprintf(stderr, "Chyba: nepodařilo se ověřit platnost certifikátu serveru %s\n",tmp);
         BIO_free_all(bio);
         SSL_CTX_free(ctx);
         ERR_free_strings();
         EVP_cleanup();
+        free(request);
         return 32;
     }
 
     //Zaslání požadavku
     if(BIO_write(bio, request, (int)strlen(request)) != strlen(request)){
-        ERR_print_errors_fp(stderr);
+        fprintf(stderr,"Chyba při zasílání požadavku\n");
         BIO_free_all(bio);
         ERR_free_strings();
         EVP_cleanup();
@@ -350,7 +362,6 @@ int getSslFeed(char *hostname, char *fileAddr, char *certFile, char *certAddr, c
 
     //přečtení výstupu
     if(processBioConn(bio,output)){
-        ERR_print_errors_fp(stderr);
         BIO_free_all(bio);
         ERR_free_strings();
         EVP_cleanup();
@@ -382,11 +393,16 @@ int getSslFeed(char *hostname, char *fileAddr, char *certFile, char *certAddr, c
  *         5x při chybě v parseru
  */
 int feedreader(TQueue *url, char *certFile, char *certAddr, int tFlag, int aFlag, int uFlag){
-
+    int allUrl = 0;
+    int errUrl = 0;
+    int lastErr = 0;
     while(url->front != NULL){
+        ok = 0;
+        pass = 0;
+        newLine = 0;
         int ssl = 0;
         char *activeUrl;
-
+        allUrl++;
         //načtení url a zpracování pro požadavek na server
         QueueFrontPop(url,&activeUrl);
         size_t activeLen = strlen(activeUrl);
@@ -413,6 +429,7 @@ int feedreader(TQueue *url, char *certFile, char *certAddr, int tFlag, int aFlag
 
         char *output = 0;
         int retVal = 0;
+
         //připojení ssl nebo bez
         if(ssl){
             retVal = getSslFeed(hostname,fileAddr,certFile,certAddr,&output);
@@ -421,19 +438,33 @@ int feedreader(TQueue *url, char *certFile, char *certAddr, int tFlag, int aFlag
         }
 
         if(retVal){
-            return retVal;
+            free(activeUrl);
+            free(hostname);
+            free(fileAddr);
+            free(output);
+            errUrl++;
+            lastErr = retVal;
+            if(url->front != NULL) {
+                printf("\n");
+            }
+            continue;
         }
 
         //předáme výsledek požadavku parseru
         retVal = parsexml(output, tFlag, aFlag, uFlag);
+        if(retVal){
+            lastErr = retVal;
+            errUrl++;
+        }
         if(url->front != NULL)
             printf("\n");
         free(activeUrl);
         free(hostname);
         free(fileAddr);
         free(output);
-        if(retVal && url->front == NULL)
-            return retVal;
+    }
+    if(allUrl == errUrl){
+        return lastErr;
     }
     return 0;
 }
