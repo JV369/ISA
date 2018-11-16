@@ -1,22 +1,29 @@
-## ISA
-### Jan Vávra (xvavra20)
+## ISA Projekt: Čtečka novinek ve formátu Atom s podporou TLS
+###Autor: Jan Vávra (xvavra20)
 
 #### Popis
-Program umožňující přečíst RSS/Atom feedy zadané URL adresou
+Program umožňující přečíst RSS/Atom feedy zadané URL adresou.
+
+#### Překlad
++ `make` - přeloží program a umístí ho do aktuálního adresáře
++ `make test` - přeloží program a spustí testy
++ `make clean` - smaže program feedreader z aktuálního adresáře
 
 #### Spuštění 
 ```
 ./feedreader <URL | -f <feedfile>> [-c <certfile>] [-C <certaddr>] [-T] [-a] [-u] [-h]
 ```
-kde:
-+ URL - adresa feedu, který má program přečíst
-+ -f *feedfile* - přepínač -f se specifikací cesty k souboru s URL odkazující na feedy
-+ -c *certfile* – přepínač -c se specifikací cesty k souboru s certifikátem, který má použít při připojení na
+Povinné:
++ `URL` - adresa feedu, který má program přečíst
++ `-f <feedfile>` - přepínač -f se specifikací cesty k souboru s URL odkazující na feedy
+
+Volitelné:
++ `-c <certfile>` – přepínač -c se specifikací cesty k souboru s certifikátem, který má použít při připojení na
   URL
-+ -C *certaddr* – přepínač -C se specifikací cesty k adresáři, který obsahuje
-+ -T – přepínač -T, který zajistí vypsání času aktualizace položky, pokud je dostupný
-+ -a – přepínač -T, který zajistí vypsání autora položky, pokud je dostupný
-+ -u – přepínač -T, který zajistí vypsání URL položky, pokud je dostupný
++ `-C <certaddr>` – přepínač -C se specifikací cesty k adresáři, který obsahuje
++ `-T` – přepínač -T, který zajistí vypsání času aktualizace položky, pokud je dostupný
++ `-a` – přepínač -T, který zajistí vypsání autora položky, pokud je dostupný
++ `-u` – přepínač -T, který zajistí vypsání URL položky, pokud je dostupný
 
 #### Seznam souborů
 + main.c - hlavní vstup programu
