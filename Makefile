@@ -10,6 +10,6 @@ tar:
 clean:
 	rm -f feedreader
 
-test:
+test: feedreader
 	chmod +x test.sh
 	./test.sh
