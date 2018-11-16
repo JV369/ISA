@@ -4,8 +4,6 @@ POSIXLY_CORRECT=yes
 
 testNum=1
 
-#pokud terminal podporuje barvicky (coz merlin nepodporuje) zakomentovat vrchní proměnné (RED,GREEN,NC)
-#a odkomentovat proměnné pod tímto komentářem (RED,GREEN,NC)
 RED=`tput setaf 1` 
 GREEN=`tput setaf 2`
 NC=`tput sgr0`
