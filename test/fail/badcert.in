@@ -1,0 +1,1 @@
+./feedreader -C /dev/null -f test/fail/badcert.txt

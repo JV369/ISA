@@ -1,0 +1,4 @@
+#A feedfile
+http://www.mocky.io/v2/5bcdec782f00005200c8564c
+http://www.mocky.io/v2/5bcdea4a2f00002c00c85638
+http://www.mocky.io/v2/5bd585de310000600041db02

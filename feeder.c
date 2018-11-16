@@ -322,6 +322,8 @@ int parseRdf(xmlNode *node, int tFlag, int aFlag, int uFlag){
     while(text->front != NULL){
         char *print;
         QueueFrontPop(text,&print);
+        if(text->front == NULL && !strcmp(print,""))
+            continue;
         printf("%s\n",print);
         free(print);
     }
@@ -384,6 +386,8 @@ int parseRss(xmlNode *node, int tFlag, int aFlag, int uFlag){
     while(text->front != NULL){
         char *print;
         QueueFrontPop(text,&print);
+        if(text->front == NULL && !strcmp(print,""))
+            continue;
         printf("%s\n",print);
         free(print);
     }
@@ -439,6 +443,8 @@ int parseAtom(xmlNode *node, int tFlag, int aFlag, int uFlag){
     while(text->front != NULL){
         char *print;
         QueueFrontPop(text,&print);
+        if(text->front == NULL && !strcmp(print,""))
+            continue;
         printf("%s\n",print);
         free(print);
     }
