@@ -11,6 +11,9 @@ int rss, rdf, atom;
 //fronta pro výstupní text
 TQueue *text;
 
+char *atom_author = NULL;
+char *atom_email = NULL;
+
 
 /**
  * Funkce zbaví element přípony, aby reader mohl fungovat i bez namespace argumentu
@@ -58,7 +61,8 @@ int checkRoot(xmlNode *root){
  */
 int loadValue(xmlNode *node, char **str){
     //kontrola, že uzel něco obsahuje
-    if(node->children != NULL && node->children->next == NULL && node->children->content != NULL) {
+    if(node->children != NULL && node->children->next == NULL && node->children->content != NULL
+       && xmlStrcmp(node->children->content,(xmlChar *)"") != 0) {
         //pokud je str NULL, oznámíme že uzel je bezpečný
         if (str == NULL) {
             return 0;
@@ -96,9 +100,19 @@ void printItem(char *title, char *time, char *author, char *email,char *url, int
         title = (char *)malloc(50);
         strcpy(title,"Bez názvu");
     }
-    else if(time == NULL){
+    if(time == NULL){
         time = (char *)malloc(50);
         strcpy(time,"chybí čas aktualizace");
+    }
+    if(atom && author == NULL && email == NULL){
+        if(atom_author != NULL){
+            author = calloc(strlen(atom_author)+1,sizeof(char));
+            strcpy(author,atom_author);
+        }
+        if(atom_email != NULL){
+            email = calloc(strlen(atom_email)+1,sizeof(char));
+            strcpy(email,atom_email);
+        }
     }
     if(author == NULL && email == NULL){
         author = (char *)malloc(50);
@@ -236,11 +250,42 @@ int processItem(xmlNode *rssItem, int tFlag, int aFlag, int uFlag){
                 if(loadValue(actItem,&url))
                     continue;
             }
+            int isAlternate = -1;
+            char *result = NULL;
             for (xmlAttr *actUrl = actItem->properties; atom && actUrl != NULL ; actUrl = actUrl->next) {
                 if(xmlStrcmp(actUrl->name,(xmlChar *)"href") == 0){
-                    if(loadValue((xmlNode *)actUrl,&url))
+                    if(loadValue((xmlNode *)actUrl,&result))
                         continue;
                 }
+                else if(xmlStrcmp(actUrl->name,(xmlChar *)"rel") == 0){
+                    if(loadValue((xmlNode *)actUrl,NULL))
+                        continue;
+                    if(xmlStrcmp(actUrl->children->content,(xmlChar *)"alternate") == 0){
+                        isAlternate = 1;
+                    }
+                    else if(xmlStrcmp(actUrl->children->content,(xmlChar *)"via") == 0){
+                        isAlternate = 0;
+                    }
+                    else{
+                        isAlternate = -2;
+                    }
+
+                }
+            }
+            if(result != NULL){
+                if(isAlternate == 1 || isAlternate == -1){
+                    if(url != NULL) {
+                        free(url);
+                        url = NULL;
+                    }
+                    url = calloc(strlen(result)+1,sizeof(char));
+                    strcpy(url,result);
+                }
+                else if(url == NULL && isAlternate != -2){
+                    url = calloc(strlen(result)+1,sizeof(char));
+                    strcpy(url,result);
+                }
+                free(result);
             }
         }
         //autor Atom, RSS 2.0
@@ -248,16 +293,44 @@ int processItem(xmlNode *rssItem, int tFlag, int aFlag, int uFlag){
             for (xmlNode *actAuthor = actItem->children; actAuthor != NULL; actAuthor = actAuthor->next) {
                 removeColom(actAuthor);
                 if(xmlStrcmp(actAuthor->name,(xmlChar *)"name") == 0){
-                    if(author == NULL && loadValue(actAuthor,&author))
+                    if(loadValue(actAuthor,NULL))
                         continue;
+                    if(author != NULL && atom) {
+                        free(author);
+                        author = NULL;
+                    }
+                    loadValue(actAuthor,&author);
                 }
                 else if(xmlStrcmp(actAuthor->name,(xmlChar *)"email") == 0){
-                    if(email == NULL && loadValue(actAuthor,&email))
+                    if(loadValue(actAuthor,NULL))
                         continue;
+                    if(email != NULL && atom) {
+                        free(email);
+                        email = NULL;
+                    }
+                    loadValue(actAuthor,&email);
                 }
                 else if(xmlStrcmp(actAuthor->name,(xmlChar *)"text") == 0){
                     if(author == NULL && loadValue(actItem,&author))
                         continue;
+                }
+            }
+        }
+        else if(xmlStrcmp(actItem->name,(xmlChar *)"source") == 0){
+            for(xmlNode *actSource = actItem->children; actSource != NULL; actSource = actSource->next){
+                removeColom(actSource);
+                if(xmlStrcmp(actSource->name,(xmlChar *)"author") == 0 && author == NULL){
+                    for (xmlNode *actAuthor = actSource->children; actAuthor != NULL; actAuthor = actAuthor->next) {
+                        removeColom(actAuthor);
+                        if(xmlStrcmp(actAuthor->name,(xmlChar *)"name") == 0){
+                            if(author == NULL && loadValue(actAuthor,&author))
+                                continue;
+                        }
+                        else if(xmlStrcmp(actAuthor->name,(xmlChar *)"email") == 0){
+                            if(email == NULL && loadValue(actAuthor,&email))
+                                continue;
+                        }
+                    }
                 }
             }
         }
@@ -421,6 +494,17 @@ int parseAtom(xmlNode *node, int tFlag, int aFlag, int uFlag){
                 printf("*** Bez názvu ***\n");
             else
                 printf("*** %s ***\n",(char *)actNode->children->content);
+        } else if(xmlStrcmp(actNode->name,(xmlChar *)"author") == 0){
+            for (xmlNode *actAuthor = actNode->children; actAuthor != NULL; actAuthor = actAuthor->next) {
+                if(xmlStrcmp(actAuthor->name,(xmlChar *)"name") == 0){
+                    if(atom_author == NULL && loadValue(actAuthor,&atom_author))
+                        continue;
+                }
+                else if(xmlStrcmp(actAuthor->name,(xmlChar *)"email") == 0){
+                    if(atom_email == NULL && loadValue(actAuthor,&atom_email))
+                        continue;
+                }
+            }
         }
         //položka (entry)
         else if(xmlStrcmp(actNode->name,(xmlChar *)"entry") == 0){
@@ -447,6 +531,14 @@ int parseAtom(xmlNode *node, int tFlag, int aFlag, int uFlag){
             continue;
         printf("%s\n",print);
         free(print);
+    }
+    if(atom_author != NULL) {
+        free(atom_author);
+        atom_author = NULL;
+    }
+    if(atom_email != NULL) {
+        free(atom_email);
+        atom_email = NULL;
     }
     return 0;
 }
